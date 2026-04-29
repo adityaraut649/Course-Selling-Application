@@ -10,7 +10,6 @@ function userMiddleware(req, rse, next) {
 
         const decoded = jwt.verify(token, JWT_USER_PASSWORD);
 
-
         req.userId = decoded.id;
 
         next();

@@ -6,7 +6,7 @@ const adminRouter = Router();
 
 // Import adminModel and courseModel from the database folder to interact with admin and course data
 const {adminModel} = require("../db");
-
+const {courseModel} = require("../db");
 const{adminMiddleware} = require ("../middleware/admin")
 // Import the required dependencies 
 const jwt = require("jsonwebtoken");
@@ -194,7 +194,7 @@ adminRouter.put("/course", adminMiddleware, async function(req,res) {
         _id: courseId, // Match the course by ID
         creatorId: adminId, // Ensure the admin is the creator
     });
-
+    console.log(course);
     // If the course is not found, respond with an error message
     if(!course){
         return res.status(404).json({
@@ -242,5 +242,5 @@ adminRouter.get("/course/bulk", adminMiddleware, async function(req,res){
 
 
 module.exports = {
-    adminRouter: adminRouter
+    adminRoutes: adminRouter
 }

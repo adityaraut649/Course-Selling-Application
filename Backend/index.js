@@ -8,15 +8,11 @@ const { courseRoutes } = require('./Routes/course');
 const { adminRoutes } = require('./Routes/admin');
 
 const PORT = process.env.PORT || 3001;
-
-app.use(express.json());
-
-
 const MONGO_URL = process.env.MONGO_URL;
 console.log(MONGO_URL);
 
 const app = express();
-
+app.use(express.json());
 app.use("/user", userRoutes);
 app.use("/course", courseRoutes);
 app.use("/admin", adminRoutes);
@@ -35,3 +31,4 @@ async function main() {
     }
 }
 main();
+

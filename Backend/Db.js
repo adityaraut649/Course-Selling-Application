@@ -1,7 +1,7 @@
 require('dotenv').config()
 
 const mongoose = require("mongoose")
-mongoose.connect("")
+mongoose.connect(process.env.MONGO_URL)
 
 const Schema = mongoose.Schema;                            
 const ObjectId = mongoose.ObjectId; 
