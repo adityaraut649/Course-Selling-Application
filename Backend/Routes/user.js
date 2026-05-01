@@ -1,13 +1,13 @@
 const { Router } = require('express');
 const userRoutes = Router();
 const { userModel } = require('../db');
-
+const { purchaseModel } = require('../db');
 const { userMiddleware } = require('../middleware/user')
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const z = require("zod");
-const {JWT_USER_PASSWORD} = require("../config")
+const { JWT_USER_PASSWORD } = require("../config")
 userRoutes.post('/signup', async (req, res) => {
 
     const Usersignup = z.object({
@@ -89,7 +89,7 @@ userRoutes.post('/signin', async (req, res) => {
         const token = jwt.sign({
             id: user._id,
         }, process.env.JWT_USER_PASSWORD);
-        
+
         res.status(200).json({
             token,
         });
@@ -100,8 +100,40 @@ userRoutes.post('/signin', async (req, res) => {
     }
 });
 
-userRoutes.get('/purchases', (req, res) => {
-    res.json('Hello World!');
+userRoutes.get('/purchases', userMiddleware, async (req, res) => {
+
+    try {
+        const userId = req.userId;
+
+        const purchase = await purchaseModel.find({
+            userId: userId
+        });
+
+        if (!purchase) {
+            return res.status(404).json({
+                message: "No purchases found"
+            });
+        }
+
+
+        const purchases = purchase.map((p) => p.courseId);
+
+        const coursesData = await courseModel.find({
+            _id: {
+                $in: purchases
+            }
+        });
+
+        res.json({
+            message: "Purchases found",
+            purchases: coursesData
+        });
+    } catch (e) {
+        res.status(500).json({
+            message: "No purchases found",
+            error: e.message
+        });
+    }
 });
 
 module.exports = {

@@ -162,65 +162,49 @@ adminRouter.post("/course", adminMiddleware, async function(req,res) {
     });
 });
 
-adminRouter.put("/course", adminMiddleware, async function(req,res) {
-    // Get the adminId from the request object, set by the admin middleware
+adminRouter.put("/course", adminMiddleware, async function(req, res) {
     const adminId = req.userId;
 
-    // Define a schema using zod to validate the request body for updating a course
     const requireBody = z.object({
-        courseId: z.string().min(5), // Ensure course ID is at least 5 characters
-        title: z.string().min(3).optional(), // Title is optional
-        description: z.string().min(5).optional(), // Description is optional
-        imageUrl: z.string().url().min(5).optional(), // Image URL is optional
-        price: z.number().positive().optional(), // Price is optional
+        courseId: z.string().min(5),
+        title: z.string().min(3).optional(),
+        description: z.string().min(5).optional(),
+        imageUrl: z.string().url().optional(),
+        price: z.number().positive().optional(),
     });
 
-    // Parse and validate the incoming request body against the schema
-    const parseDataWithSuccess = requireBody.safeParse(req.body);
+    const parsedData = requireBody.safeParse(req.body);
 
-    // If validation fails, respond with an error message and the details of the error
-    if(!parseDataWithSuccess){
-        return res.json({
+    if (!parsedData.success) {
+        return res.status(400).json({
             message: "Incorrect data format",
-            error: parseDataWithSuccess.error,
+            error: parsedData.error,
         });
     }
 
-    // Destructure the validated fields from the request body
-    const {title,description,imageUrl,price,courseId} = req.body;
+    const { title, description, imageUrl, price, courseId } = parsedData.data;
 
-    // Attempt to find the course in the database using the provided courseId and adminId
-    const course = await courseModel.findOne({
-        _id: courseId, // Match the course by ID
-        creatorId: adminId, // Ensure the admin is the creator
-    });
-    console.log(course);
-    // If the course is not found, respond with an error message
-    if(!course){
-        return res.status(404).json({
-            message: "Course not found!", // Inform the client that the specified course does not exist
-        });
-    }
-
-    // Update the course details in the database using the updates object
-    await courseModel.updateOne({
-        _id: courseId, // Match the course by ID
-        creatorId: adminId, // Ensure the admin is the creator
-    },
+const updatedCourse = await courseModel.findByIdAndUpdate(
+    courseId,
     {
-        // It uses the provided courseId and adminId to identify the course. For each field (title, description, imageUrl, price), if a new value is provided, it is used to update the course. If a field is not provided, the existing value from the database is kept.
-        title: title || course.title,
-        description: description || course.description,
-        imageUrl: imageUrl || course.imageUrl,
-        price: price || course.price,
-    });
+        title,
+        description,
+        price
+    },
+    { new: true }
+);
 
-    // Respond with a success message upon successful course update
+if (!updatedCourse) {
+    return res.status(404).json({
+        message: "Course not found"
+    });
+}
+
     res.status(200).json({
-        message: "Course updated!", // Successfully course updated or not
+        message: "Course updated!",
+        course: updatedCourse
     });
 });
-
 
 
 // Define the admin routes for getting all courses
